@@ -864,6 +864,8 @@ def install_miniconda(conda_version, target_machine):
     miniconda_url = f"https://repo.anaconda.com/miniconda/Miniconda3-{conda_version}-Linux-{target_machine}.sh"
     if target_machine == 'x86_64':
         sha_sum = "32d73e1bc33fda089d7cd9ef4c1be542616bd8e437d1f77afeeaf7afdb019787"
+    elif target_machine == 's390x':
+        sha_sum = "0d00a9d34c5fd17d116bf4e7c893b7441a67c7a25416ede90289d87216104a97"
     else:
         sha_sum = "80d6c306b015e1e3b01ea59dc66c676a81fa30279bc2da1f180a7ef7b2191d6e"
     return f'''
@@ -1193,6 +1195,14 @@ RUN ln -sf ${_CUDA_COMPAT_PATH}/lib.real ${_CUDA_COMPAT_PATH}/lib \
 
     # Add dependencies needed for python backend
     if 'python' in backends:
+        if target_machine == 's390x':
+            df += '''
+# gcc, g++ required for numpy installation on s390x
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+            gcc g++ && \
+    rm -rf /var/lib/apt/lists/*
+'''
         df += '''
 # python3, python3-pip and some pip installs required for the python backend
 RUN apt-get update && \
